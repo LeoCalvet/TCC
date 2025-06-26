@@ -1,47 +1,101 @@
-# FastAPI Celery Redis Postgres Docker REST API
+# A Study on Asynchronous REST API Testing
 
-### Summary:
+This project serves as the practical subject for a Final Paper, focusing on the challenges and strategies for testing asynchronous REST APIs. It explores the key differences between validating traditional synchronous endpoints and modern, non-blocking asynchronous flows that rely on background task processing.
 
-This is simple REST API project using a modern stack with **[FastAPI](https://fastapi.tiangolo.com/)**.  
-**[Celery](http://www.celeryproject.org/)** for background tasks  
-**[Redis](https://redis.io/)** for the message broker  
-**[PostgreSQL](https://www.postgresql.org/)** for the database  
-**[SqlAlchemy](https://www.sqlalchemy.org/)** for ORM  
-**[Docker](https://docs.docker.com/)** for containerization  
-**[Docker Compose](https://docs.docker.com/compose/)** for defining and running multi-container  
+This work uses a robust stack including **FastAPI**, **Celery** for background tasks, **Redis** as a message broker, and **PostgreSQL** for data persistence, all containerized with **Docker**.
 
-![Summary](img/Summary.png)
+## Original Project Acknowledgments
+
+This project is an extension and in-depth study based on the excellent work of **Alperen Cubuk**. The original repository provides a fantastic foundation for a modern web application and can be found here:
+
+* **Original Author:** Alperen Cubuk
+* **Original Repository:** [https://github.com/alperencubuk/fastapi-celery-redis-postgres-docker-rest-api](https://github.com/alperencubuk/fastapi-celery-redis-postgres-docker-rest-api)
+
+## Thesis Focus: Testing Asynchronous APIs
+
+While traditional API testing focuses on immediate request-response validation (a synchronous flow), modern applications increasingly use background tasks to handle long-running or non-critical processes, improving responsiveness and user experience. However, this introduces complexity into the testing cycle.
+
+This project, with its Celery-based background tasks, provides a perfect environment to study and demonstrate solutions for:
+
+* **The 3-Step Testing Pattern:** Implementing and validating the **Trigger -> Poll -> Verify** pattern required for asynchronous operations.
+* **Handling Asynchronicity:** Addressing challenges like managing test execution time, implementing reliable polling strategies, and avoiding flaky tests.
+* **End-to-End Validation:** Ensuring that a task not only is accepted by the API but is successfully processed by the worker and results in the correct state change in the database.
+
+## Core Technologies
+
+* **[FastAPI](https://fastapi.tiangolo.com/)**: High-performance web framework for building APIs.
+* **[Celery](http://www.celeryproject.org/)**: Distributed task queue for running background jobs.
+* **[Redis](https://redis.io/)**: In-memory data store, used as the Celery message broker.
+* **[PostgreSQL](https://www.postgresql.org/)**: Powerful, open-source object-relational database system.
+* **[SQLAlchemy](https://www.sqlalchemy.org/)**: The Python SQL Toolkit and Object Relational Mapper.
+* **[Docker](https://docs.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)**: For containerization and running the multi-container application.
+
+## Architecture Diagram
+
+![Architecture Diagram](img/Summary.png)
 
 ---
 
-### Endpoints Table:
+## Getting Started
+
+### Requirements
+
+* Docker
+* Docker Compose
+
+### How to Run the Application
+
+1.  Clone the repository to your local machine.
+2.  Navigate to the project's root directory in your terminal.
+3.  Run the following command to build and start all services:
+    ```bash
+    docker-compose up --build
+    ```
+4.  The application services will start. The API will be available at `http://localhost:80`.
+
+---
+
+## How to Test the Application
+
+This project includes an automated integration test that validates the end-to-end asynchronous user creation flow, implementing the **Trigger -> Poll -> Verify** strategy.
+
+### Running the Automated Test
+
+1.  **Ensure the application is running** (execute `docker-compose up` first).
+2.  **Install test dependencies** in your local Python environment:
+    ```bash
+    pip install pytest requests
+    ```
+3.  From the project's root directory, run the test using `pytest`:
+    ```bash
+    pytest -v -s
+    ```
+
+---
+
+## API Endpoints
 
 | Request URL              | Description                                                                                         | HTTP |
 | ------------------------ | --------------------------------------------------------------------------------------------------- | ---- |
-| /users/{count}           | Get random user data from randomuser.me/api and add database using Celery. (Delay = 10 sec) | `POST` |
-| /users/{count}/{delay}   | Get random user data from randomuser.me/api and add database using Celery.                  | `POST` |
-| /users/{user\_id}        | Get user from database.                                                                             | `GET`  |
-| /weathers/{city}         | Get weather data from api.collectapi.com/weather and add database using Celery. (Delay = 10 sec)    | `POST` |
-| /weathers/{city}/{delay} | Get weather data from api.collectapi.com/weather and add database using Celery.                     | `POST` |
-| /weathers/{city}         | Get weather from database.                                                                          | `GET`  |
-| /tasks/{task\_id}        | Get task status.                                                                                    | `GET`  |
+| `/users/{count}`           | Triggers an async task to fetch and save users from `randomuser.me/api`. (Default delay: 10 sec) | `POST` |
+| `/users/{count}/{delay}`   | Triggers an async task with a specific delay in seconds.                                            | `POST` |
+| `/users/{user_id}`        | Gets a user from the database by their ID.                                                          | `GET`  |
+| `/weathers/{city}`         | Triggers an async task to fetch and save weather data. (Default delay: 10 sec)                     | `POST` |
+| `/weathers/{city}/{delay}` | Triggers an async task to fetch weather data with a specific delay.                                  | `POST` |
+| `/weathers/{city}`         | Gets the last 7 weather records for a city from the database.                                     | `GET`  |
+| `/tasks/{task_id}`        | Gets the status of a background task (`SUCCESS`, `PENDING`, `FAILURE`).                            | `GET`  |
 
 ---
 
-### Requirements:
-* Docker and Docker Compose
+## Example Manual API Flow (Trigger -> Poll -> Verify)
 
-### How to Run:
+This example shows how to manually test the asynchronous flow for creating 10 users.
 
-```
-docker-compose up --build
-```
+### Step 1: Trigger the Task
 
-### Example Requests:
+Send a `POST` request to start the user creation task. The API immediately responds with a `task_id`.
 
----
-
-#### Request:
+**Request:**
 ```http request
 POST /users/10
 ```
@@ -152,7 +206,3 @@ GET /tasks/46f5f77a-5fd7-41dd-898b-235d5def4a70
     "state": "SUCCESS"
 }
 ```
-
----
-
-**Alperen Cubuk**
